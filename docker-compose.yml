@@ -1,0 +1,52 @@
+version: '3'
+
+services:
+  elevatus_service_base:
+    container_name: elevatus_service
+    build:
+      context: .
+      ssh:
+        - default
+    volumes:
+      - ${PWD}:/app
+    networks:
+      - fastapi-network
+
+
+  elevatus_service:
+    container_name: elevatus_service
+    extends:
+      service: elevatus_service_base
+    # command:  [
+    #     "gunicorn",
+    #     "-c",
+    #     "gunicorn_conf.py",
+    #     "-b",
+    #     "0.0.0.0:8000",
+    #     "--reload",
+    #     "src.main:app",]
+    volumes:
+      - ${PWD}:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - elevatus_db
+    networks:
+      - fastapi-network
+
+  # PostgreSQL database
+  elevatus_db:
+    image: postgres:latest
+    container_name: elevatus_db
+    environment:
+      POSTGRES_DB: dbname
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    networks:
+      - fastapi-network
+
+networks:
+  fastapi-network:
+    driver: bridge
