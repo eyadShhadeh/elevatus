@@ -39,22 +39,3 @@ async def root() -> Dict[str, str]:
     return {"message": "Welcome to subscription-domain-service"}
 
 
-@app.on_event("startup")
-async def startup_event() -> None:
-    configure_sentry()
-    configure_logging()
-    configure_event_bus()
-    instantiate_parasite(app=app)
-
-
-@app.on_event("startup")
-@repeat_every(seconds=ONE_MINUTE, logger=logger, wait_first=False)
-def periodic() -> None:
-    with engine.connect() as conn:
-        try:
-            conn.execute('SELECT 1')
-            health.mark_healthy()
-        except Exception as e:
-            health.mark_unavailable(str(e))
-
-
