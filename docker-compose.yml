@@ -1,8 +1,8 @@
-version: '3'
+version: "3"
 
 services:
-  elevatus_service_base:
-    container_name: elevatus_service
+  elevatus-service-base:
+    container_name: elevatus-service-base
     build:
       context: .
       ssh:
@@ -11,12 +11,17 @@ services:
       - ${PWD}:/app
     networks:
       - fastapi-network
-
+    environment:
+      - PGUSER=postgres
+      - PGPASSWORD=password
+      - PGHOST=elevatus-service-db
+      - PGPORT=5432
+      - PGDATABASE=postgres
 
   elevatus_service:
     container_name: elevatus_service
     extends:
-      service: elevatus_service_base
+      service: elevatus-service-base
     # command:  [
     #     "gunicorn",
     #     "-c",
@@ -30,20 +35,37 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - elevatus_db
+      - elevatus-service-db
     networks:
       - fastapi-network
 
-  # PostgreSQL database
-  elevatus_db:
+  elevatus-service-db:
     image: postgres:latest
-    container_name: elevatus_db
+    container_name: elevatus-service-db
     environment:
-      POSTGRES_DB: dbname
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      - VIRTUAL_HOST=elevatus-service-db.docker
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_HOST_AUTH_METHOD=trust
     ports:
       - "5432:5432"
+    networks:
+      - fastapi-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+
+
+  elevatus-service-alembic:
+    extends:
+      service: elevatus-service-base
+    depends_on: 
+      elevatus-service-db:
+        condition: service_healthy
+    container_name: elevatus-service-alembic
+    command: ["alembic", "upgrade", "head"]
     networks:
       - fastapi-network
 

@@ -7,7 +7,7 @@ import os
 #       would mean the debug level is debug, not info
 import sys
 
-from src.infra.observability.log import EVENT_BUS_LOG_LEVEL, LOG_DATE_FORMAT, LOG_LEVEL, LOG_MESSAGE_FORMAT
+from src.infra.observability.log import LOG_DATE_FORMAT, LOG_LEVEL, LOG_MESSAGE_FORMAT
 
 environment = os.getenv('ENVIRONMENT')
 is_dev = environment == 'dev'
@@ -66,11 +66,6 @@ logconfig_dict = {
         },
         'gunicorn.error': {
             'level': LOG_LEVEL,
-            'handlers': ['console'],
-            'propagate': False,
-        },
-        'event_bus_sdk': {
-            'level': EVENT_BUS_LOG_LEVEL,
             'handlers': ['console'],
             'propagate': False,
         },
